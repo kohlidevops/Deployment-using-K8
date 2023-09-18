@@ -115,7 +115,69 @@ Check the docker version and create one more script to install kubernetes
     minikube start 
     minikube status
 
-    
+Step -6: Create a GitHub repository
+
+Login to GitHub and create a remote repository.Then create a Dockerfile using below link.
+
+        https://github.com/kohlidevops/my-k8-project/blob/main/Dockerfile
+
+Step -7: Create a Pipeline project
+
+To Create a new item with Pipeline project.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/feece006-20bc-4a76-903b-e2760daa4494)
+
+In your project, select Pipeline syntax to configure the Git checkout stage.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/e1ddbe04-ef5c-4197-a46d-ec3d2c9dc830)
+
+Then generate a pipeline syntax
+
+        git branch: 'main', url: 'https://github.com/kohlidevops/my-k8-project.git'
+
+Go back to your project - scroll down - select - Pipeline - Definition - Pipeline script - add Git Checkout stage
+
+        node {
+            stage('Git Checkout')
+                git branch: 'main', url: 'https://github.com/kohlidevops/my-k8-project.git'
+            }
+
+Now Apply & Save, then build your project. The build has been succedded.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/c537d3db-ad37-4f72-8147-1f9155849fc5)
+
+Check your Jenkins server through SSH and navigate to inside the below directory
+
+        #cd /var/lib/jenkins/workspace
+        #ls
+
+Your project should be available.
+
+Step -8: Configure Git Webhook
+
+We need to configure Git SCM Polling in Jenkins and add webhook in your project in Github to trigger the build stage automatically whenever user changes their code.
+
+Select your project in Jenkins UI and select configure then select the Build triggers - GitHub hook trigger for GITSCM Polling - Apply & Save.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/40b19704-f4bc-49e6-a364-aaa0c46b804c)
+
+Then select user in upper-right in jenkins UI - configure - Add API Token - Generate - Copy it to use later
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/17de3809-9350-432d-885d-24b1d71afa73)
+
+Select your project in GitHub repository - settings - Webhooks - Add Webhook - Copy Paste the API Token here
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/bad58815-354a-419b-9256-dabdce15dc08)
+
+Events - Let me select individual events - choose - Pushes & Pull requests - Add Webhook
+
+Let's do some changes in Dockerfile and check whether Jenkins build is started automatically.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/c85f099f-d15e-4768-8704-a395170461b5)
+
+Perfect! Automatically triggered as we expected.
+
+
 
   
 
