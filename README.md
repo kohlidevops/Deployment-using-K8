@@ -342,3 +342,6 @@ Yes! I can able to see the latest & version of my images in docker hub repositor
 
 ![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/677104c0-fa8a-4e9f-b8e0-b38904a3150d)
 
+Step -13: Create a Deployment, Service and Ansible yaml files
+
+Create a Deployment yaml file - copy paste the file using below link.
