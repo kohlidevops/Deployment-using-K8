@@ -43,7 +43,7 @@ Here we go!
 
 Install a SSH-Agent in Jenkins console - Select - Manage Plugins - Available - SSH-Agent - Install without restart
 
-Step -4: Install and Configure Ansible
+Step -4: Install and Configure Ansible & Docker
 
 SSH to Ansible Instance
 
@@ -55,6 +55,10 @@ SSH to Ansible Instance
     #sudo apt update -y
     #sudo apt install ansible -y
     #ansible --version
+    #sudo apt-get install docker.io -y
+    #sudo systemctl start docker.service
+    #sudo systemctl enable docker.service
+    #sudo systemctl status docker.service
 
 Step -5: Install and Configure Kubernetes
 
@@ -239,7 +243,43 @@ Yes, File is available.
 
 ![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/6ae7effc-f0f9-4b90-bb09-49f9fdb21d36)
 
+Step -11: Build and Tagging stage
 
+Go back to your project in Jenkins UI and choose - configure - Pipeline statement. Now your Pipeline would be like below.
 
-  
+        node {
+            stage('Git Checkout'){
+                git branch: 'main', url: 'https://github.com/kohlidevops/my-k8-project.git'
+                    }
+            stage('Sending Docker file to Ansible Server Over SSH'){
+                sshagent(['ansible_ssh']) {
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.201'
+                    sh 'scp /var/lib/jenkins/workspace/my-k8-project/* ubuntu@172.31.3.201:/home/ubuntu/'
+                            }
+                    }
+             stage('Docker Build Image'){
+                sshagent(['ansible_ssh']){
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.201 cd /home/ubuntu'
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.201 sudo docker image build -t $JOB_NAME:v1.$BUILD_ID .'
+                                }
+                    }
+            stage('Docker image tagging'){
+                sshagent(['ansible_ssh']){
+                     sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 cd /home/ubuntu'
+                     sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 sudo docker image tag $JOB_NAME:v1.$BUILD_ID latchudevops/$JOB_NAME:v1.$BUILD_ID'
+                     sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 sudo docker image tag $JOB_NAME:v1.$BUILD_ID latchudevops/$JOB_NAME:latest'
+                        }
+                }
+            }
 
+Apply & Save - Start the build. Yes build has been succedded.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/919e44ad-da3b-4ca6-b604-dc94f3a97dd5)
+
+Let's go and check with ansible machine whether images are created.
+
+        #sudo docker images
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/05da7216-a839-4460-bf59-75488128c80b)
+
+Step -12: Pushing Docker image to Docker Hub
