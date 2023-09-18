@@ -344,4 +344,17 @@ Yes! I can able to see the latest & version of my images in docker hub repositor
 
 Step -13: Create a Deployment, Service and Ansible yaml files
 
-Create a Deployment yaml file - copy paste the file using below link.
+Create a Deployment yaml file - copy paste the file using below link and upload these files to Git Hub repository.
+
+        https://github.com/kohlidevops/my-k8-project/blob/main/Deployment.yml
+        https://github.com/kohlidevops/my-k8-project/blob/main/Service.yml
+        https://github.com/kohlidevops/my-k8-project/blob/main/ansible.yml
+        
+
+If you are facing issue in kubernetes machine with localhost:8080 or docker should not use privileges, then run below comman on kubernetes machine to work on it.
+
+        $sudo su
+        #minikube start --force --driver=docker
+        #kubectl get pods
+
+    
