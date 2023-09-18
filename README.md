@@ -177,6 +177,68 @@ Let's do some changes in Dockerfile and check whether Jenkins build is started a
 
 Perfect! Automatically triggered as we expected.
 
+Step -9: Configure Passwordless authentication in Ansible server
+
+SSH to Ansible machine and edit sshd config file and update the line like below
+
+        #vi /etc/ssh/sshd_config
+
+        PermitRootLogin yes
+        PasswordAuthentication yes
+
+        save and exit and restart the SSHD
+
+        #service sshd restart
+
+To set the password for ubuntu user in Ansible machine
+
+        #sudo passwd ubuntu
+        
+SSH to Jenkins machine and generate ssh-key and copy it to the Ansible machine
+
+        #ssh-keygen
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/0b7a80b6-eb32-430b-944e-ba17fb8d3005)
+
+        #ssh-copy-id ubuntu@ansible-machine-private-ip
+        #ssh ubuntu@ansible-machine-private-ip
+
+Perfect! I can able to login to ansible machine from jenkins machine. Expected one.
+
+Step -10: Configure ansible stage in Jenkins UI
+
+Go back to Pipeline syntax generator - select - sshagent-SSH Agent
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/f9d3b7b1-ade9-47e6-a9a1-99a89ee4d7a8)
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/22a1c7cf-1ace-471d-baf9-6319750353bd)
+
+Enter the private key directly - then Add this configuration to generate the syntax
+
+        sshagent(['ansible_ssh']) {
+            // some block
+            }
+
+Now you Pipeline stage would be like below
+
+        node {
+            stage('Git Checkout'){
+                git branch: 'main', url: 'https://github.com/kohlidevops/my-k8-project.git'
+                }
+            stage('Sending Docker file to Ansible Server Over SSH'){
+                sshagent(['ansible_ssh']) {
+                sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.201'
+                sh 'scp /var/lib/jenkins/workspace/my-k8-project/* ubuntu@172.31.3.201:/home/ubuntu/'
+                        }
+                    }    
+            }
+
+Apply & save then start the build. Go back to ansible machine and check whether Dockerfile is available inside /home/ubuntu/
+
+Yes, File is available.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/6ae7effc-f0f9-4b90-bb09-49f9fdb21d36)
+
 
 
   
