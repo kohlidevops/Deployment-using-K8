@@ -283,3 +283,62 @@ Let's go and check with ansible machine whether images are created.
 ![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/05da7216-a839-4460-bf59-75488128c80b)
 
 Step -12: Pushing Docker image to Docker Hub
+
+Go back to Jenkins pipeline syntax generator to create a syntax to login docker hub. Select - withCredentials: Bind credentials to varibales with Secret text - then Add Jenkins to inject docker hub password.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/ca3b0e0e-4858-43f2-bbc4-b3eed18fdeff)
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/8bc4824d-53c0-4329-aaf2-e45944da49ed)
+
+Then generate the syntax.
+
+        withCredentials([string(credentialsId: 'docker_hub_password', variable: 'docker_hub_password')]) {
+            // some block
+            }
+
+Go to your Jenkins project - configure - pipeline statement. Your Pipeline script would be like below
+
+        node {
+            stage('Git Checkout'){
+                git branch: 'main', url: 'https://github.com/kohlidevops/my-k8-project.git'
+                        }
+            stage('Sending Docker file to Ansible Server Over SSH'){
+                sshagent(['ansible_ssh']) {
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.201'
+                    sh 'scp /var/lib/jenkins/workspace/my-k8-project/* ubuntu@172.31.3.201:/home/ubuntu/'
+                                }
+                        }
+             stage('Docker Build Image'){
+                sshagent(['ansible_ssh']){
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.201 cd /home/ubuntu'
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.201 sudo docker image build -t $JOB_NAME:v1.$BUILD_ID .'
+                                }
+                        }
+            stage('Docker image tagging'){
+                sshagent(['ansible_ssh']){
+                     sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 cd /home/ubuntu'
+                     sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 sudo docker image tag $JOB_NAME:v1.$BUILD_ID latchudevops/$JOB_NAME:v1.$BUILD_ID'
+                     sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 sudo docker image tag $JOB_NAME:v1.$BUILD_ID latchudevops/$JOB_NAME:latest'
+                                }
+                        }
+            stage ('Push Docker Images to DockerHub'){
+                 sshagent(['ansible_ssh']) {
+                     withCredentials([string(credentialsId: 'docker_hub_password', variable: 'docker_hub_password')]) {
+                         sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 sudo docker login -u latchudevops -p $docker_hub_password'
+                         sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 sudo docker image push latchudevops/$JOB_NAME:v1.$BUILD_ID'
+                         sh 'ssh -o StrictHostKeyChecking=no  ubuntu@172.31.3.201 sudo docker image push latchudevops/$JOB_NAME:latest'
+                                }
+                        }
+                    }
+
+        }
+
+
+Apply & save - Then start the build. Yes! the build has been succedded.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/861d6e3d-57a0-4384-ac93-24fef548c3d1)
+
+Yes! I can able to see the latest & version of my images in docker hub repository.
+
+![image](https://github.com/kohlidevops/Deployment-using-K8/assets/100069489/677104c0-fa8a-4e9f-b8e0-b38904a3150d)
+
